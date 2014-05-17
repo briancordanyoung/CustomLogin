@@ -107,39 +107,33 @@ module.exports.User = User;
 
 
 
-var getGroupListForGroup = function (groupName) {
-	var groupObject, groupProperty
-	var groupArray = [];
-	var myGroup = directory.group( groupName ); // creates the group object
-	
-	if (myGroup !== null) {
-		groupArray.push(groupName);
-		groupObject = myGroup.getChildren("allLevels");
-
-		for (groupProperty in groupObject) {
-				groupArray.push(groupObject[groupProperty].name);
-		}
-	}
-
-	return groupArray;
-}
-
-
 //Wakanda Login Listener
 var customLoginListener = function (emailAddress, password) {
-	var theGroups = [];
-	var connectTime;
-	var myUser = ds.User({email:emailAddress}); // Get the user
-
-	
+	//May need permission to read User class for new session.
+	var sessionRef = currentSession(); // Get session.
+	var myUser = ds.User({email:emailAddress});
 	if (myUser === null) {
 		return false;
 	} else {
 		//we will handle login
 		if (myUser.validatePassword(password)) {
-			theGroups = getGroupListForGroup(myUser.role);
+			var theGroups = [];
 			
-			connectTime = new Date();
+			switch (myUser.role) {
+				case "Administrator":
+				theGroups = ['Administrator'];
+				break;
+
+				case "Manager":
+				theGroups = ['Manager'];
+				break;
+
+				default:
+				theGroups = ['Employee'];
+				break;
+			}
+			
+			var connectTime = new Date();
 			return {
 				ID: myUser.ID,
 				name: myUser.email,
@@ -149,7 +143,8 @@ var customLoginListener = function (emailAddress, password) {
 			}
 			
 		} else {
-			return {error: 1024, errorMessage: "invalid login"};
+			
+		return {error: 1024, errorMessage: "invalid login"};
 		}
 		
 	}
